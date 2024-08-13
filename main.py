@@ -38,7 +38,7 @@ while generating:
     inp_success = False
     while inp_success != True:
         try:
-            width = int(input("Input a width for your ASCII art (>=1): "))
+            width = int(input("\nInput a width for your ASCII art (>=1): "))
             if width >= 1:
                 inp_success = True
             else:
@@ -53,7 +53,7 @@ while generating:
 
     ascii_chars = ".-:=;+!rc/z?sLTvJ7|FiCfI31tluneoZ5Yxjya2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@"
 
-    print("Current ASCII glyph string: " + ascii_chars)
+    print("\nCurrent ASCII glyph string: " + ascii_chars)
 
     prompting = True
     while prompting:
@@ -68,6 +68,20 @@ while generating:
                 time.sleep(0.2)
         elif change_chars == "n":
             prompting = False
+        else:
+            print("Invalid input, please try again.\n")
+            time.sleep(0.2)
+    
+    mode = False
+    prompting = True
+    while prompting:
+        change_chars = input("\nChoose a display mode? (y for lighten mode / n for darken mode): ").lower()
+        if change_chars == "y":
+            prompting = False
+            mode = True
+        elif change_chars == "n":
+            prompting = False
+            mode = False
         else:
             print("Invalid input, please try again.\n")
             time.sleep(0.2)
@@ -98,7 +112,7 @@ while generating:
             contrast_curve_horizontal_shift_input = input("\nCurrent contrast horizontal shift amount is " + str(contrast_curve_horizontal_shift) + ".\nA value less than 127.5 will make the final art piece darker. A value greater than 127.5 will make the final art piece lighter.\nPress ENTER to accept the current value, or input a value between 0 and 255: ")
             contrast_curve_horizontal_shift = promptClamped(contrast_curve_horizontal_shift, float(contrast_curve_horizontal_shift_input) if contrast_curve_horizontal_shift_input != "" else "", nmin=0, nmax=255)
 
-            contrast_dampener_inp = input("\nCurrent contrast dampener factor is" + str(contrast_dampener) + ".\nThe contrast dampener factor reduces the effects of the contrast curve that is configured above. A factor of 1 changes nothing, any number greater than that will diminish the contrast change.\nPress ENTER to accept the current value, or input a number greater than 1: ")
+            contrast_dampener_inp = input("\nCurrent contrast dampener factor is " + str(contrast_dampener) + ".\nThe contrast dampener factor reduces the effects of the contrast curve that is configured above. A factor of 1 changes nothing, any number greater than that will diminish the contrast change.\nPress ENTER to accept the current value, or input a number greater than 1: ")
             contrast_dampener = promptClamped(contrast_dampener, int(contrast_dampener_inp) if contrast_dampener_inp != "" else "", nmin=1)
 
             print("\ny=[(a/255-h)^2 + k )] / c")
@@ -125,7 +139,9 @@ while generating:
             original_val = round((R + G + B) / 3)
             
             # this is a quadratic equation, like this: y = -4/255(x-255/2)^2 + 255
-            quadratic_transform = contrast_curve_multipler/255 * ((original_val - contrast_curve_horizontal_shift)**2) + contrast_amount if original_val != contrast_curve_horizontal_shift else 0
+            quadratic_transform = (contrast_curve_multipler/255) * ((original_val - contrast_curve_horizontal_shift)**2) + contrast_amount
+            if original_val == contrast_curve_horizontal_shift:
+                quadratic_transform = 0
             
             if original_val > contrast_curve_horizontal_shift:
                 darknesses[y].append(clamp(original_val + (quadratic_transform / contrast_dampener), 0, 255))
@@ -138,7 +154,10 @@ while generating:
         ascii_art.append([])
         for val in darknesses[i]:
             char_index = math.ceil(val / (255 / dark_vals))
-            ascii_art[i].append(ascii_chars[len(ascii_chars) - (char_index)] if char_index != 0 else ascii_chars[len(ascii_chars)-1])
+            if mode:
+                ascii_art[i].append(ascii_chars[char_index] if char_index != len(ascii_chars) else ascii_chars[len(ascii_chars)-1])
+            else:
+                ascii_art[i].append(ascii_chars[len(ascii_chars) - (char_index)] if char_index != 0 else ascii_chars[len(ascii_chars)-1])
 
     final_piece = []
 
